@@ -1,4 +1,20 @@
+---
+allowed_tools: Bash(git tag*), Bash(git status*), Bash(git switch*), Bash(git pull*), Bash(git checkout*), Bash(git merge*), Bash(git log*), Bash(git branch*), Bash(git fetch*), Bash(git diff*), Bash(which*)
+---
+
 You are executing a production release workflow. The arguments are: $ARGUMENTS
+
+## Pre-flight: Model Check
+
+Before doing anything else, check what model you are. If your model name contains "opus" or "fable" (case-insensitive), display this warning and stop:
+
+> ⚠️ **Warning:** You are running as a higher-tier model (Opus or Fable). This release workflow is designed to run on the cheapest available model to keep costs low. Consider switching to Sonnet (or a Haiku model, if available in your model picker) before proceeding.
+>
+> Type **continue** to proceed anyway, or switch to a cheaper model and re-run `/release`.
+
+Do NOT proceed until the user explicitly types "continue". If they do not, abort.
+
+If you are running as Sonnet or Haiku, proceed immediately without mentioning the model check.
 
 Parse the arguments:
 - The **version number** is the first positional argument (e.g. `1.2.3`). It is optional — if not provided, Step 0 will discover it.
@@ -90,14 +106,49 @@ git tag VERSION
 
 ## Step 6: Confirm before pushing
 
-Show the user a summary of what was done locally:
-- The merge commit on main
-- The tag created
-- The commits included (`git log --oneline -5`)
+**This step is mandatory. Do NOT skip or abbreviate it.**
 
-**STOP and ask the user:** "Everything looks good locally. Ready to push to origin? (yes/no)"
+First, fetch the latest remote state to ensure the comparison is accurate:
+```
+git fetch origin
+```
 
-Do NOT proceed until the user explicitly confirms. If the user says "no", inform them they can undo with `git reset --hard HEAD~1 && git tag -d VERSION` and abort.
+Then show the user **all** of the following — do not truncate any section:
+
+**What will be pushed to main (every commit, no limit):**
+```
+git log origin/main..main --oneline
+```
+
+**What is currently on GitHub (last 5 commits on origin/main):**
+```
+git log origin/main --oneline -5
+```
+
+**Tag to be pushed:** VERSION
+
+**Validation — confirm develop is fully represented in the merge:**
+
+Run:
+```
+git log origin/main..main --oneline
+```
+
+Compare this output against the commit list captured in Step 3 (what develop had to ship).
+
+- If every commit from Step 3 is present: confirm with "✓ All N commits from develop are included in this push."
+- If any commit from Step 3 is missing from this list: display a prominent warning showing exactly which commits did not make it into main, and **do not proceed** until the user acknowledges and confirms they want to push anyway.
+
+Present this as a clear, labelled summary with section headings. Make it easy to review at a glance.
+
+**STOP and ask the user:** "Everything looks good locally. Ready to push VERSION to origin? (yes/no)"
+
+Do NOT proceed until the user explicitly says "yes". If the user says "no", inform them they can undo with:
+```
+git reset --hard origin/main
+git tag -d VERSION
+```
+Then abort.
 
 ## Step 7: Push to origin (only after user confirms Step 6)
 
