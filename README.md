@@ -1,6 +1,6 @@
 # Bespoke Git Workflow
 
-Automated release commands for Claude Code and GitHub Copilot. Replaces the manual git release process with a single command that handles safety checks, merging to main, and tagging.
+Automated release command for Claude Code. Replaces the manual git release process with a single command that handles safety checks, merging to main, and tagging.
 
 ## What it does
 
@@ -16,36 +16,27 @@ Runs the standard release flow:
 
 ## Install
 
-Clone this repo, then copy the relevant directory into your project:
+Clone this repo into your `~/.claude` folder to make the command available globally across all projects:
 
 ```bash
-git clone <repo-url> bespoke-git-workflow-commands
+git clone <repo-url> /tmp/bespoke-git-workflow-commands
+cp /tmp/bespoke-git-workflow-commands/.claude/commands/release.md ~/.claude/commands/release.md
 ```
 
-**Claude Code** — copy `.claude/` into your project root:
-```bash
-cp -R bespoke-git-workflow-commands/.claude your-project/
-```
+To scope it to a single project instead, copy into that project's `.claude/commands/` directory:
 
-**GitHub Copilot** — copy `.github/prompts/` into your project:
 ```bash
-mkdir -p your-project/.github/prompts
-cp bespoke-git-workflow-commands/.github/prompts/release.prompt.md your-project/.github/prompts/
+cp /tmp/bespoke-git-workflow-commands/.claude/commands/release.md your-project/.claude/commands/release.md
 ```
 
 ## Usage
 
-**Claude Code**
 ```
 /release              # auto-detect version from tags
 /release 1.2.3        # skip discovery, use explicit version
 /release --gh-release # auto-detect version + create GitHub release
 /release 1.2.3 --gh-release
 ```
-
-**GitHub Copilot**
-
-Use `#release` in Copilot Chat and follow the prompts.
 
 ## Selective releases
 
