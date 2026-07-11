@@ -4,6 +4,8 @@ Automated release command for Claude Code. Replaces the manual git release proce
 
 ## What it does
 
+Local-first, conflict-safe, and cost-aware: nothing is pushed until you confirm, merge conflicts stop the flow rather than being auto-resolved, and the command is restricted to non-destructive git operations (read, merge, tag). It also warns if you're running on a higher-tier model (Opus or Fable) so releases stay cheap.
+
 Runs the standard release flow:
 
 1. Discovers the latest version from git tags and offers increment options (patch, minor, major)
@@ -16,17 +18,17 @@ Runs the standard release flow:
 
 ## Install
 
-Clone this repo into your `~/.claude` folder to make the command available globally across all projects:
+Clone the repo, then copy the command into your `~/.claude/commands` folder to make it available globally across all projects:
 
 ```bash
-git clone <repo-url> /tmp/bespoke-git-workflow-commands
-cp /tmp/bespoke-git-workflow-commands/.claude/commands/release.md ~/.claude/commands/release.md
+git clone https://github.com/jareddreyerss/bespoke-git-workflow-commands.git
+cp bespoke-git-workflow-commands/.claude/commands/release.md ~/.claude/commands/release.md
 ```
 
 To scope it to a single project instead, copy into that project's `.claude/commands/` directory:
 
 ```bash
-cp /tmp/bespoke-git-workflow-commands/.claude/commands/release.md your-project/.claude/commands/release.md
+cp bespoke-git-workflow-commands/.claude/commands/release.md your-project/.claude/commands/release.md
 ```
 
 ## Usage
@@ -44,15 +46,21 @@ If certain features on develop need to be excluded, create a `release/x.x.x` bra
 
 ## Testing
 
-> **Warning:** Test scripts destroy all git history in the repo they run in. Only run these in a disposable repo — never in your real project.
+> [!CAUTION]
+> Test scripts destroy all git history in the repo they run in. Only run these in a disposable repo — never in your real project.
+
+As a safety net, the scripts **will refuse to run from inside this repo** (a `.command-repo-root` marker at the repo root is their tripwire). 
+You must copy the `test/` folder into a disposable repo and run them from there. Running them in place aborts before doing anything.
 
 Create a disposable repo, copy the `test/` folder into it, then run a setup script. Each script sources `test/reset.sh` which nukes `.git`, re-inits, clones the latest release commands from GitHub, and creates `main` (tagged `1.0.0`) + `develop`.
 
 ```bash
-# Create a disposable test repo and copy test scripts into it
-git init /tmp/test-release
-cp -R test /tmp/test-release/
-cd /tmp/test-release
+# <working_dir> is wherever you choose to run the tests — YOUR pick, and not the
+# same place you cloned the repo. Copy the test scripts out of your clone into a
+# disposable sandbox under it, then run from there.
+git init <working_dir>/tmp/test-release
+cp -R /path/to/bespoke-git-workflow-commands/test <working_dir>/tmp/test-release/
+cd <working_dir>/tmp/test-release
 
 # Standard release: develop → main
 bash test/setup-standard-release.sh
@@ -62,3 +70,6 @@ bash test/setup-selective-release.sh
 ```
 
 After running a setup script, run `/release` from the same repo to test the flow.
+
+> [!NOTE]
+> `reset.sh` clones the release commands fresh from GitHub, so the tests exercise the **published** `release.md` on `origin/main` — not your local working copy. Push your changes before testing if you want local edits to `release.md` to take effect.

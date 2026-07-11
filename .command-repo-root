@@ -1,0 +1,10 @@
+Marker for the root of the bespoke-git-workflow-commands source repo.
+
+The test/ scripts refuse to run whenever this marker is present in the repo
+they would operate on, so they can never wipe this repo's own git history.
+
+To run the tests, copy the test/ folder into a disposable repo and run it from
+there (see the Testing section of the README). Do not delete this file, and do
+not copy it into a test sandbox.
+
+https://media1.tenor.com/m/CY3i6bnFTR8AAAAd/hqrg-whoa.gif

@@ -10,6 +10,17 @@ set -euo pipefail
 # Run from the test/ folder inside a disposable repo.
 # =============================================================================
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# --- Safety guard: refuse to run inside the command repo ---
+if [[ -f "$REPO_DIR/.command-repo-root" ]]; then
+  echo "ERROR: don't run the test scripts from the command repo." >&2
+  echo "They wipe all git history. Copy test/ into a disposable repo and run it there:" >&2
+  echo "  git init /tmp/test-release && cp -R test /tmp/test-release/ && cd /tmp/test-release" >&2
+  exit 1
+fi
+
 echo "WARNING: This destroys all git history in the parent directory."
 echo "Only run this in a disposable clone."
 read -rp "Continue? (y/n) " confirm
@@ -17,8 +28,6 @@ if [[ "$confirm" != "y" ]]; then
   echo "Aborted."
   exit 0
 fi
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # --- Reset to clean state ---
 source "$SCRIPT_DIR/reset.sh"

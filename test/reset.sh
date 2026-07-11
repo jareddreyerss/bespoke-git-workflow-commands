@@ -17,6 +17,19 @@ REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$REPO_DIR"
 
+# --- Safety guard ---------------------------------------------------------
+# This script WIPES all git history in REPO_DIR. The command repo root carries
+# a .command-repo-root marker; if it is present we are inside the real repo (or
+# a full copy of it), so refuse. The documented sandbox is built by copying
+# only test/, so it never contains this marker and passes cleanly.
+if [[ -f "$REPO_DIR/.command-repo-root" ]]; then
+  echo "ERROR: refusing to run inside the command repo ('$REPO_DIR')." >&2
+  echo "These scripts wipe all git history. Copy test/ into a disposable repo first:" >&2
+  echo "  git init /tmp/test-release && cp -R test /tmp/test-release/ && cd /tmp/test-release" >&2
+  echo "then run the setup script from there. See the Testing section of the README." >&2
+  exit 1
+fi
+
 # --- Clean up branches ---
 git checkout --orphan _reset_temp 2>/dev/null || true
 git rm -rf . 2>/dev/null || true
